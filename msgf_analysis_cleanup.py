@@ -71,7 +71,7 @@ def pivot_fxns(filtered_df):
 
     return piv
 
-def compute_coverage(dataframe, seq_db):
+def compute_coverage(dataframe, seq_db, outputHTML=False):
     """
      Computes the sequence coverage of all proteins with peptides that map to them.
 
@@ -84,6 +84,13 @@ def compute_coverage(dataframe, seq_db):
     seq_db = SeqIO.index(seq_db, "fasta") #type dict_keyiterator
     ids = seq_db.keys()
     coverage_dict = {}
+
+    if outputHTML:
+        html_message = """<html>
+        <head></head>
+        <title>Sequence coverage map</title>
+        <body>\n"""
+
     for id in ids:
         iseq = seq_db[id]
         #print(iseq.seq)
@@ -106,6 +113,24 @@ def compute_coverage(dataframe, seq_db):
                 #Change values in cov_array
                 cov_array[start:end] = 1
 
+        #If html, add sequence info to html file and color sequence
+        #according to coverage
+        if outputHTML and np.sum(cov_array) > 1:
+            html_message += "<br>>%s<br>" %id
+
+            #Loop through string/coverage array
+            for aa,cov in zip(iseq.seq,cov_array):
+                if cov:
+                    html_message += """<span style="color:#D4D100">%s</span>\n""" %aa
+                else:
+                    html_message += """<span style="color:#000000">%s</span>\n""" %aa
+
+            #Add last piece to HTML file
+            html_message += """</body>\n</html>"""
+
+
+
+
         coverage = np.sum(cov_array) / len(cov_array)
         coverage_dict[id] = coverage
         #print("Coverage for %s is %.2f" %(id,coverage))
@@ -114,9 +139,10 @@ def compute_coverage(dataframe, seq_db):
     coverage_dict2 = {k:v for k,v  in coverage_dict.items() if v != 0.}
     #coverage_dictF = dict((v,k) for k,v in coverage_dict2.items())
 
-    return coverage_dict2
-
-
+    if outputHTML:
+        return coverage_dict2, html_message
+    else:
+        return coverage_dict2
 
 
 def main():
@@ -126,7 +152,7 @@ def main():
     output_path = r"C:\Users\steph\Box\OmalleyLabfiles\Data\Proteomics\G1_cellulosome_proteomics_2021\COV_results"
 
     #Iterate through file paths and run .tsv files
-    for fpath in [cb_path,fp_path,rcg_path]:
+    for fpath in [rcg_path]:
         for tsvFile in os.listdir(fpath):
             if tsvFile.endswith('.tsv'):
 
@@ -138,9 +164,15 @@ def main():
                 
                 #print(new_lib.shape)
                 piv_table = pivot_fxns(new_lib)
-                coverage_dict = compute_coverage(new_lib,seq_db)
-                #print(len([k for k in coverage_dict.keys()]))
+                coverage_dict, coverage_html = compute_coverage(new_lib,seq_db,outputHTML=True)
 
+                if coverage_html:
+                    output_fname = os.path.split(tsvFile)[-1][:-4] + "_coverage.html"
+                    with open(os.path.join(fpath,output_fname),'w') as f:
+                        f.write(coverage_html)
+
+                #print(len([k for k in coverage_dict.keys()]))
+                """
                 print(piv_table.columns)
                 #Add coverages to piv_table
 
@@ -152,10 +184,10 @@ def main():
                 filename = os.path.split(tsvFile)[-1]
                 #print(os.path.split(my_file))
 
-                new_filename = os.path.join(output_path,filename[:-4] + "_COV.xlsx")
+                new_filename = os.path.join(output_path,filename[:-4] + "_test.xlsx")
                 print("Writing to file %s" %new_filename)
                 piv_table.to_excel(new_filename)
-
+                """
 
 
 if __name__ == "__main__":
