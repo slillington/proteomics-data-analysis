@@ -10,6 +10,10 @@ import sys
 import errno
 import argparse
 
+from Bio import SeqIO, pairwise2
+from Bio.Seq import Seq
+from Bio.pairwise2 import format_alignment
+
 Usage = """Takes the tsv output from MzidToTsvConverter after MSGF+ proteomics
     data analysis runs and produces a list of protein IDs with counts (unique
     and non-unique) of spectra that mapped to each protein ID.
@@ -64,6 +68,22 @@ def tsv_filter(input_tsv, fdr_tag="DECOY"):
     filtered = filtered[['Protein', 'Peptide']]
 
     return filtered, fdr
+
+def compute_coverage(tsv_file, seq_db):
+    """
+     Computes the sequence coverage of all proteins with peptides that map to them.
+
+     Input: tsv_file, type str. Path to the filtered tsv file containing the peptides
+     identified by MS.
+
+     Output: A list of protein IDs with % sequence coverage
+
+    """
+    df = pd.read_csv(tsv_file,sep='\t')
+    seq_db = SeqIO.index(seq_db, "fasta") #type dict_keyiterator
+    #seq_db[<id>] will return the Seq object to pull the sequence
+
+    print(next(seq_db)['id'])
 
 
 def pivot_fxns(filtered_df):
@@ -129,7 +149,8 @@ if not os.path.isdir(outpath):
     sys.exit()
 
 #Run convert_files
-convert_files(tsv_list,outpath)
+#convert_files(tsv_list,outpath)
+compute_coverage(tsv_list[0],outpath)
 
 
 
