@@ -8,7 +8,7 @@ msgf_analysis_cleanup.py -
 
  The functions filter the MSGF+ output to a specified false discovery rate.
  **As of July 2022, I have been running MzidToTsvConverter with the following specs:
-    MzidToTsvConverter -mzid:<mzid-file-path> -u -sd -MaxE 0.001
+    MzidToTsvConverter -mzid:<mzid-file-path> -u -sd -MaxE 0.01
 
- So MzidToTsvConverter filters the spectra matches with an E-value cutoff. See the MzidToTsvConverter
+MzidToTsvConverter filters the spectra matches generated with MSGF+ with an E-value cutoff. See the MzidToTsvConverter
  documentation for more details: https://github.com/PNNL-Comp-Mass-Spec/Mzid-To-Tsv-Converter
